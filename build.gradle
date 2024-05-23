@@ -1,0 +1,65 @@
+configurations {
+    jaxb
+}
+
+group 'code.shubham'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 21
+
+repositories {
+    mavenCentral()
+}
+
+tasks.register('genJaxb') {
+    ext.sourcesDir = "${buildDir}/generated-sources/jaxb/code/shubham/xml/models"
+    ext.classesDir = "${buildDir}/classes/jaxb"
+    outputs.dir classesDir
+
+    doLast() {
+        project.ant {
+            // Create output directories
+            mkdir(dir: sourcesDir)
+            mkdir(dir: classesDir)
+
+            taskdef name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath
+
+            xjc(destdir: sourcesDir) {
+                schema(dir: "${projectDir}/src/main/resources", includes: '**/*.xsd')
+                arg(value: "-extension")
+                produces(dir: sourcesDir, includes: '**/*.java')
+            }
+
+            javac(destdir: classesDir, source: 21, target: 21, debug: true,
+                    debugLevel: 'lines,vars,source',
+                    includeantruntime: false,
+                    classpath: configurations.jaxb.asPath) {
+                src(path: sourcesDir)
+                include(name: '**/*.java')
+                include(name: '*.java')
+            }
+
+            copy(todir: classesDir) {
+                fileset(dir: sourcesDir, erroronmissingdir: false) {
+                    exclude(name: '**/*.java')
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+
+    // jaxb
+    compileOnly(files(genJaxb.classesDir).builtBy(genJaxb))
+    jaxb 'com.sun.xml.bind:jaxb-xjc:4.0.5'
+    jaxb "com.migesok:jaxb-java-time-adapters:1.1.3"
+}
+
+compileJava.dependsOn 'genJaxb'
+
+jar {
+    from genJaxb.classesDir
+}
