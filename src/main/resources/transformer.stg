@@ -1,0 +1,27 @@
+transformer(transformer_name, source, destination, fields) ::= <<
+package code.shubham.transformers;
+
+import code.shubham.transformers.Transformer;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+
+/**
+ * This is an auto-generated class.
+ * The abstract mapper classes generated are used for auto-generating the MapperImpl classes
+ */
+@Mapper
+public abstract class <transformer_name> implements Transformer\<<source>, <destination>\> {
+
+    public <destination> transform(<source> source) {
+        return transformSource(source);
+    }
+
+    @Mappings({
+    <fields: {field |
+    @Mapping(source="<field.source>", target="<field.destination>")}>
+    })
+    protected abstract <destination> transformSource(<source> source);
+}
+>>
